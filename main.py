@@ -75,5 +75,6 @@ if __name__ == '__main__':
     scheduler = BackgroundScheduler()
     scheduler.add_job(job, 'cron', day_of_week='mon-fri', hour=22, minute=00)
     scheduler.start()
+    # test
     while True:
         time.sleep(60)
