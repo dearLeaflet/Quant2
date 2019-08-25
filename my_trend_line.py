@@ -2,6 +2,33 @@ import pandas as pd
 import tushare_data
 
 
+def _ema(series, n):
+    """
+    指数平均数
+    """
+    return series.ewm(ignore_na=False, span=n, min_periods=0, adjust=False).mean()
+
+
+def macd(df, n=12, m=26, k=9):
+    """
+    平滑异同移动平均线(Moving Average Convergence Divergence)
+    今日EMA（N）=2/（N+1）×今日收盘价+(N-1)/（N+1）×昨日EMA（N）
+    DIFF= EMA（N1）- EMA（N2）
+    DEA(DIF,M)= 2/(M+1)×DIF +[1-2/(M+1)]×DEA(REF(DIF,1),M)
+    MACD（BAR）=2×（DIF-DEA）
+    return:
+          osc: MACD bar / OSC 差值柱形图 DIFF - DEM
+          diff: 差离值
+          dea: 讯号线
+    """
+    _macd = pd.DataFrame()
+    _macd['date'] = df['trade_date']
+    _macd['diff'] = _ema(df.close, n) - _ema(df.close, m)
+    _macd['dea'] = _ema(_macd['diff'], k)
+    _macd['macd'] = _macd['diff'] - _macd['dea']
+    return _macd
+
+
 def kdj(df, n=9):
     """
     随机指标KDJ
@@ -31,10 +58,20 @@ def sma(a, n, m=1):
 def hs300_kdj():
     """
     返回沪深300KDJ指标
-    :param df:
     :return:
     """
     hs300_index = hs300_daily_info = tushare_data.get_index_daily('000300.SH')
     hs300_index = hs300_daily_info[hs300_index['trade_date'] > '20180615']
     hs300_index = hs300_index.sort_values(by=['trade_date'], ascending=True)
     return kdj(df=hs300_index)
+
+
+def hs300_macd():
+    """
+    返回沪深300MACD指标
+    :return:
+    """
+    hs300_index = hs300_daily_info = tushare_data.get_index_daily('000300.SH')
+    hs300_index = hs300_daily_info[hs300_index['trade_date'] > '20180615']
+    hs300_index = hs300_index.sort_values(by=['trade_date'], ascending=True)
+    return macd(df=hs300_index)

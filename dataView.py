@@ -2,6 +2,8 @@ from datetime import datetime
 
 import db_data as data
 import pandas
+
+import my_trend_line
 import tushare_data
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -56,7 +58,7 @@ def save_trade_figure():
     可视化比较
     :return:
     """
-
+    line_sum = str(8)
     plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
     plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
 
@@ -64,14 +66,15 @@ def save_trade_figure():
 
     money_flow_statistic_rate = money_flow_statistic['small_total_rate']
     money_flow_statistic_rate_rolling = date_rolling(money_flow_statistic_rate)
-    draw_single(money_flow_statistic['trade_date'], money_flow_statistic_rate_rolling, '511', '中证800小单成交比例')
+    draw_single(money_flow_statistic['trade_date'], money_flow_statistic_rate_rolling, line_sum + '11',
+                '中证800小单成交比例')
 
     # 小单买卖比例图
     small_buy_vs_sell = money_flow_statistic['small_buy_vs_sell']
     small_buy_vs_sell_rolling = pandas.DataFrame(small_buy_vs_sell).rolling(window=3, min_periods=1,
                                                                             center=True)
     small_buy_vs_sell_rolling = small_buy_vs_sell_rolling.mean()
-    draw_single(money_flow_statistic['trade_date'], small_buy_vs_sell_rolling, '512', '小单买卖比例')
+    draw_single(money_flow_statistic['trade_date'], small_buy_vs_sell_rolling,  line_sum + '12', '小单买卖比例')
     """
     money_flow_statistic['baseline_small'] = 1
     plt.plot(myIndexDate, money_flow_statistic['baseline_small'])
@@ -81,11 +84,11 @@ def save_trade_figure():
     hs300_daily_info = tushare_data.get_index_daily('000300.SH')
     hs300_daily_info = hs300_daily_info.loc[hs300_daily_info['trade_date'] > '20180630']
     hs300_close_rolling = date_rolling(hs300_daily_info['close'])
-    draw_single(hs300_daily_info['trade_date'], hs300_close_rolling, '513', '沪深300指数')
+    draw_single(hs300_daily_info['trade_date'], hs300_close_rolling, line_sum + '13', '沪深300指数')
 
     # 沪深300成交量图
     hs300_vol_rolling = date_rolling(hs300_daily_info['vol'])
-    draw_single(hs300_daily_info['trade_date'], hs300_vol_rolling, '514', '沪深300成交量')
+    draw_single(hs300_daily_info['trade_date'], hs300_vol_rolling, line_sum + '14', '沪深300成交量')
     """
     hs300_daily_info['vol_baseline_1'] = 100000000
     hs300_daily_info['vol_baseline_075'] = 75000000
@@ -96,7 +99,25 @@ def save_trade_figure():
     # 融资余额
     margin_info = db_data.get_margin_info()
     rzye_rolling = date_rolling(margin_info['rzye'])
-    draw_single(margin_info['trade_date'], rzye_rolling, '515', '融资余额')
+    draw_single(margin_info['trade_date'], rzye_rolling,  line_sum + '15', '融资余额')
+
+    # 沪港通现金流信息
+    # hsgt_info = db_data.get_hsgt_info()
+    # south_money_rolling = date_rolling(hsgt_info['south_money'])
+    # draw_single(hsgt_info['trade_date'], south_money_rolling, '616', '沪港通现金流')
+
+    # north_money_rolling = date_rolling(hsgt_info['north_money'])
+    # draw_single(hsgt_info['trade_date'], north_money_rolling, line_sum + '18', '沪港通现金流')
+
+    # kdj指标
+    KDJ_index = my_trend_line.hs300_kdj()
+    draw_single(KDJ_index['date'], KDJ_index['k'],  line_sum + '16', 'KDJ')
+    draw_single(KDJ_index['date'], KDJ_index['d'],  line_sum + '16', 'KDJ')
+
+    # macd指标
+    MACD_index = my_trend_line.hs300_macd()
+    draw_single(MACD_index['date'], MACD_index['diff'],  line_sum + '17', 'MACD')
+    draw_single(MACD_index['date'], MACD_index['dea'],  line_sum + '17', 'MACD')
 
     figure = plt.gcf()  # 获取当前图片
     figure.set_size_inches(21.6, 24)
@@ -130,8 +151,8 @@ def date_rolling(date):
     """
     if date is None or date.size < 1:
         return None
-    rzye_rolling = pandas.DataFrame(date).rolling(window=3, min_periods=1, center=True)
-    return rzye_rolling.mean()
+    rolling = pandas.DataFrame(date).rolling(window=3, min_periods=1, center=True)
+    return rolling.mean()
 
 
 save_trade_figure()
