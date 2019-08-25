@@ -2,7 +2,6 @@ import my_mail
 import tushare_data
 import db_data
 import dataView
-import seeker
 from apscheduler.schedulers.background import BackgroundScheduler
 import time
 
@@ -59,7 +58,7 @@ def job():
         print(err)
 
     try:
-        seeker.browser.close()
+        db_data.hsgt_add(today=True)
     except Exception as err:
         print(err)
     my_mail.send_mail()

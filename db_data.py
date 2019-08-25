@@ -15,7 +15,6 @@ import tushare_data
 # 初始化数据库连接:
 import util
 import params
-import seeker
 
 engine = create_engine(
     f'mysql+mysqlconnector://{params.DATABASE_USER}:{params.DATABASE_PASSWORD}@localhost:3306/{params.MY_INDEX_BASE}')
@@ -329,44 +328,6 @@ def get_money_flow_statistic():
     return tables.getMoneyFlowStatistic()
 
 
-def add_hist_etf_exchange_amt():
-    """
-    插入历史ETF交易数据
-    :return:
-    """
-    etf_exchange_info = seeker.get_etf_daily_exchange_amt()
-    if etf_exchange_info is not None:
-        for item in etf_exchange_info:
-            try:
-                tables.etf_exchange_amt_add(trade_date=item[0], amt=item[1])
-            except Exception as err:
-                print('{0} ETF交易数据插入失败'.format(item[0]))
-                print(err)
-
-
-def get_etf_exchange_info():
-    """
-    获取ETF交易数据
-    :return:
-    """
-    return tables.get_etf_exchange_amt()
-
-
-def add_today_etf_exchange_amt():
-    """
-    插入历史ETF交易数据
-    :return:
-    """
-    print("插入当日ETF交易数据")
-    etf_exchange_info = seeker.get_etf_today_exchange_amt()
-    if etf_exchange_info is not None:
-        try:
-            tables.etf_exchange_amt_add(trade_date=etf_exchange_info[0], amt=etf_exchange_info[1])
-        except Exception as err:
-            print('{0} ETF交易数据插入失败'.format(etf_exchange_info[0]))
-            print(err)
-
-
 def add_margin_info(today=None):
     """
     插入融资融券信息
@@ -416,3 +377,47 @@ def get_margin_info():
     """
     return tables.get_margin_info()
 
+
+def hsgt_add(today=None):
+    """
+    插入沪港通资金流向信息
+    :return:
+    """
+    pro = tushare_data.get_tushare_pro()
+    if today is None:
+        hs300_daily_info = tushare_data.get_index_daily('000300.SH')
+        hs300_daily_info = hs300_daily_info.loc[hs300_daily_info['trade_date'] > '20180630']
+        for date in hs300_daily_info['trade_date']:
+            hsgt_info = pro.moneyflow_hsgt(trade_date=date)
+            if hsgt_info is None or hsgt_info.size == 0:
+                continue
+            try:
+                north_money = hsgt_info['north_money'][0]
+                south_money = hsgt_info['south_money'][0]
+                tables.money_flow_hsgt_add(trade_date=date, north_money=north_money,
+                                           south_money=south_money)
+                print(date, ':沪港通现金流信息插入成功')
+            except Exception as err:
+                print(date, ':沪港通现金流信息插入失败', err)
+        print('沪港通现金流信息插入完成')
+    else:
+        date = datetime.datetime.now().strftime('%Y%m%d')
+        hsgt_info = pro.moneyflow_hsgt(trade_date=date)
+        if hsgt_info is None or hsgt_info.size == 0:
+            return
+        try:
+            north_money = hsgt_info['north_money'][0]
+            south_money = hsgt_info['south_money'][0]
+            tables.money_flow_hsgt_add(trade_date=date, north_money=north_money,
+                                       south_money=south_money)
+            print(date, ':沪港通现金流信息插入成功')
+        except Exception as err:
+            print(date, ':沪港通现金信息插入失败', err)
+
+
+def get_hsgt_info():
+    """
+    获取沪港通资金流向信息
+    :return:
+    """
+    return tables.get_hsgt_info()

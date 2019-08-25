@@ -396,3 +396,37 @@ def margin_info_add(trade_date, rzye, rzmre, rzche, rqye, rqmcl, rzrqye):
 def get_margin_info():
     """融资融券交易汇总信息查询"""
     return pandas.read_sql(session.query(Margin).statement, session.bind)
+
+
+class MoneyFlowHSGT(Base):
+    """
+    沪港通资金流向
+
+    """
+    __tablename__ = 'moneyflowhsgt'
+    trade_date = Column(String(8), primary_key=True)
+    north_money = Column(INTEGER(32))
+    south_money = Column(INTEGER(32))
+
+
+def money_flow_hsgt_add(trade_date, north_money, south_money):
+    """
+    沪港通资金信息插入
+
+    :param date:交易日期
+    :param north_money:北向资金
+    :param south_money:南向资金
+    :return:
+    """
+    hsgt = MoneyFlowHSGT(trade_date=trade_date, north_money=north_money, south_money=south_money)
+    try:
+        session.add(hsgt)
+        session.commit()
+    except Exception as err:
+        session.rollback()
+        raise
+
+
+def get_hsgt_info():
+    """沪港通资金信息查询"""
+    return pandas.read_sql(session.query(MoneyFlowHSGT).statement, session.bind)
