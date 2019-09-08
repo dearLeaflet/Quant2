@@ -12,12 +12,11 @@ import datetime
 import myDb
 import tables
 import tushare_data
-# 初始化数据库连接:
 import util
 import params
 
-engine = create_engine(
-    f'mysql+mysqlconnector://{params.DATABASE_USER}:{params.DATABASE_PASSWORD}@localhost:3306/{params.MY_INDEX_BASE}')
+engine = create_engine("mysql://root:{0}@{1}/{2}".format(params.PASSWORD, params.DBIP, params.DATABASE_NAME),
+                       encoding='latin1', echo=True)
 DBSession = sessionmaker(bind=engine)
 # 创建Session:
 session: object = DBSession()
