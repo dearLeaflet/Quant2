@@ -11,7 +11,7 @@ def db_connect():
     """
     数据库连接
     """
-    db = mysql.connect("localhost", params.DATABASE_USER, params.DATABASE_PASSWORD, params.DATABASE_NAME)
+    db = mysql.connect(params.DBIPO, params.DATABASE_USER, params.DATABASE_PASSWORD, params.DATABASE_NAME)
     print("数据库连接成功")
     return db
 

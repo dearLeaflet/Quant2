@@ -74,7 +74,7 @@ def save_trade_figure():
     small_buy_vs_sell_rolling = pandas.DataFrame(small_buy_vs_sell).rolling(window=3, min_periods=1,
                                                                             center=True)
     small_buy_vs_sell_rolling = small_buy_vs_sell_rolling.mean()
-    draw_single(money_flow_statistic['trade_date'], small_buy_vs_sell_rolling,  line_sum + '12', '小单买卖比例')
+    draw_single(money_flow_statistic['trade_date'], small_buy_vs_sell_rolling, line_sum + '12', '小单买卖比例')
     """
     money_flow_statistic['baseline_small'] = 1
     plt.plot(myIndexDate, money_flow_statistic['baseline_small'])
@@ -99,25 +99,24 @@ def save_trade_figure():
     # 融资余额
     margin_info = db_data.get_margin_info()
     rzye_rolling = date_rolling(margin_info['rzye'])
-    draw_single(margin_info['trade_date'], rzye_rolling,  line_sum + '15', '融资余额')
+    draw_single(margin_info['trade_date'], rzye_rolling, line_sum + '15', '融资余额')
 
     # 沪港通现金流信息
-    # hsgt_info = db_data.get_hsgt_info()
+    hsgt_info = db_data.get_hsgt_info()
     # south_money_rolling = date_rolling(hsgt_info['south_money'])
     # draw_single(hsgt_info['trade_date'], south_money_rolling, '616', '沪港通现金流')
-
-    # north_money_rolling = date_rolling(hsgt_info['north_money'])
-    # draw_single(hsgt_info['trade_date'], north_money_rolling, line_sum + '18', '沪港通现金流')
+    north_money_rolling = date_rolling(hsgt_info['north_money'])
+    draw_single(hsgt_info['trade_date'], north_money_rolling, line_sum + '18', '沪港通现金流')
 
     # kdj指标
     KDJ_index = my_trend_line.hs300_kdj()
-    draw_single(KDJ_index['date'], KDJ_index['k'],  line_sum + '16', 'KDJ')
-    draw_single(KDJ_index['date'], KDJ_index['d'],  line_sum + '16', 'KDJ')
+    draw_single(KDJ_index['date'], KDJ_index['k'], line_sum + '16', 'KDJ')
+    draw_single(KDJ_index['date'], KDJ_index['d'], line_sum + '16', 'KDJ')
 
     # macd指标
     MACD_index = my_trend_line.hs300_macd()
-    draw_single(MACD_index['date'], MACD_index['diff'],  line_sum + '17', 'MACD')
-    draw_single(MACD_index['date'], MACD_index['dea'],  line_sum + '17', 'MACD')
+    draw_single(MACD_index['date'], MACD_index['diff'], line_sum + '17', 'MACD：蓝色为DIFF')
+    draw_single(MACD_index['date'], MACD_index['dea'], line_sum + '17', 'MACD：蓝色为DIFF')
 
     figure = plt.gcf()  # 获取当前图片
     figure.set_size_inches(21.6, 24)
@@ -155,4 +154,20 @@ def date_rolling(date):
     return rolling.mean()
 
 
-save_trade_figure()
+def margin_info_figure():
+    pro = tushare_data.get_tushare_pro()
+    df = pro.margin(start_date='20140922')
+    rziy = df.groupby(['trade_date'])['rzye'].sum()
+    print(rziy)
+    draw_single(df['trade_date'].drop_duplicates(), rziy, '211', '融资余额')
+
+    hs300_daily_info = tushare_data.get_index_daily('000300.SH')
+    hs300_daily_info = hs300_daily_info.loc[hs300_daily_info['trade_date'] > '20140922']
+    hs300_close_rolling = date_rolling(hs300_daily_info['close'])
+    draw_single(hs300_daily_info['trade_date'], hs300_close_rolling, '212', '沪深300指数')
+
+    figure = plt.gcf()  # 获取当前图片
+    figure.set_size_inches(21.6, 24)
+    plt.savefig('./result/' + datetime.now().strftime('%Y%m%d') + 'yzye.png', dpi=100)
+
+margin_info_figure()

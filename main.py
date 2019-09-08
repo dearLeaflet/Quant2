@@ -40,17 +40,12 @@ def job():
         db_data.add_money_flow_today()
     except Exception as err:
         print(err)
+
     # 当日股票现金流统计信息
     try:
         db_data.add_money_flow_statistic(today=True)
     except Exception as err:
         print(err)
-
-    try:
-        db_data.add_today_etf_exchange_amt()
-    except Exception as err:
-        print(err)
-    dataView.save_trade_figure()
 
     try:
         db_data.add_margin_info(today=True)
@@ -61,6 +56,8 @@ def job():
         db_data.hsgt_add(today=True)
     except Exception as err:
         print(err)
+
+    dataView.save_trade_figure()
     my_mail.send_mail()
 
 
@@ -71,9 +68,13 @@ if __name__ == '__main__':
     # db_data.add_money_flow_statistic()
     # 当日个股现金流信息
     # db_data.add_hist_etf_exchange_amt()
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(job, 'cron', day_of_week='mon-fri', hour=22, minute=00)
+    """
+       scheduler = BackgroundScheduler()
+    scheduler.add_job(job, 'cron', day_of_week='0-6', hour=22, minute=41)
     scheduler.start()
     # test
     while True:
         time.sleep(60)
+
+    """
+    job()
